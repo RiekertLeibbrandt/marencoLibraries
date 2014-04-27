@@ -16,7 +16,7 @@ namespace Marenco.Comms
         public BlueSerial(int baudRate = 115200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             serialPort = new SerialPort(SerialPorts.COM1, baudRate, parity, dataBits, stopBits);
-            serialPort.ReadTimeout = 10; // Set to 10ms. Default is -1?!
+            serialPort.ReadTimeout = 1; // Set to 10ms. Default is -1?!
             serialPort.Open();
         }
 
