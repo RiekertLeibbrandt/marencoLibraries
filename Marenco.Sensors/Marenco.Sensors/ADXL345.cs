@@ -7,6 +7,11 @@ using System.Threading;
 
 namespace Marenco.Sensors
 {
+                   public enum enRange
+        {
+            range2g, range4g, range8g,range16g
+        }
+
     public class ADXL345
     {
         //ADXL345 Register Addresses
@@ -70,6 +75,29 @@ namespace Marenco.Sensors
             values = new byte[6];
         }
 
+        public void setRange(enRange range)
+        {
+            byte rangeByte = 0;
+            switch (range)
+            {
+                case enRange.range2g:
+                    rangeByte = 0;
+                    break;
+                case enRange.range4g:
+                    rangeByte = 1;
+                    break;
+                case enRange.range8g:
+                    rangeByte = 2;
+                    break;
+                case enRange.range16g:
+                    rangeByte = 3;
+                    break;
+            }
+            spiBus.Write(new byte[] { DATA_FORMAT, rangeByte });
+        }
+
+
+
         public void setOffsets(byte x, byte y, byte z)
         {
             xOffset = x;
@@ -101,6 +129,10 @@ namespace Marenco.Sensors
             if (input == 200)
             {
                 rateData = 0x0B;
+            } 
+            if (input == 400)
+            {
+                rateData = 0x0C;
             }
             Thread.Sleep(100);
             spiBus.Write(new byte[] { BW_RATE, rateData });

@@ -56,6 +56,7 @@ namespace Marenco.Comms
                     (byte)((value >> 56) & 0xFF)};
             serialPort.Write(junk, 0, 8);
         }
+
         public void Print(string theString)
         {
             byte[] junk = System.Text.Encoding.UTF8.GetBytes(theString);
