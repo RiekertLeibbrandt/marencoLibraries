@@ -218,7 +218,6 @@ namespace Marenco.Comms
         {
             WriteRegisterBit(CANINTF, 0, 0);
             WriteRegisterBit(CANINTF, 1, 0);
-
         }
 
         public void SetMask(UInt16 filter, UInt16 mask)
