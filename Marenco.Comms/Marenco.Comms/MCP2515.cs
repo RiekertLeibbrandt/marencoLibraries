@@ -196,8 +196,30 @@ namespace Marenco.Comms
             {
                 //  Must set the filters and masks while the 2515 is in reset state.
 
-                SetMask(mask, filter);
+                SetMask(mask, filter,false);
                 SetCANBaud(baudrate);
+                return true;
+            }
+        }
+
+        public bool InitCAN(enBaudRate baudrate, UInt16 filter0, UInt16 filter1, UInt16 mask)
+        {
+            // Configure SPI 
+            var configSPI = new SPI.Configuration(Pins.GPIO_PIN_D2, LOW, 0, 0, HIGH, HIGH, 10000, SPI.SPI_module.SPI1);  //a0 D10
+
+            spi = new SPI(configSPI);
+
+            // Write reset to the CAN transceiver.
+            spi.Write(new byte[] { RESET });
+            //Read mode and make sure it is config
+
+
+            Thread.Sleep(100);
+             {
+
+                 SetMask(mask, filter0, false);
+                 SetMask(mask, filter1, true);
+                 SetCANBaud(baudrate);
                 return true;
             }
         }
@@ -220,8 +242,11 @@ namespace Marenco.Comms
             WriteRegisterBit(CANINTF, 1, 0);
         }
 
-        public void SetMask(UInt16 filter, UInt16 mask)
+        public void SetMask(UInt16 filter, UInt16 mask, bool setTwo)
         {
+            //
+            //  Currently only 2 filters are allowed. This is quite sloppy.
+            //
             // p 27, set for standard messages and  only
             // and with acceptance filter 0
             CheckRegisters();
@@ -245,25 +270,45 @@ namespace Marenco.Comms
 
             // Set the filter
 
-            high = (byte)(filter >> 3);
-            low = (byte)(filter & 0x007);
+            if (!setTwo)
+            {
 
-            WriteRegister(RXF0SIDH, high);
-            b = ReadRegister(RXF0SIDH);
-            WriteRegister(RXF0SIDL, (byte)(low << 5));
-            b = ReadRegister(RXF0SIDL);
+                high = (byte)(filter >> 3);
+                low = (byte)(filter & 0x007);
 
-            //
-            //  Enable inteerupt. Must be done before setting
-            //  the baud rate.
-            //
-            b = ReadRegister(CANINTE);
+                WriteRegister(RXF0SIDH, high);
+                WriteRegister(RXF0SIDL, (byte)(low << 5));
 
-            WriteRegisterBit(CANINTE, 0, 1);
-            b = ReadRegister(CANINTE);
-            WriteRegisterBit(CANINTF, 0, 0);
-            b = ReadRegister(CANINTF);
+                //
+                //  Enable inteerupt. Must be done before setting
+                //  the baud rate.
+                //
+                b = ReadRegister(CANINTE);
 
+                WriteRegisterBit(CANINTE, 0, 1);
+                b = ReadRegister(CANINTE);
+                WriteRegisterBit(CANINTF, 0, 0);
+                b = ReadRegister(CANINTF);
+            }
+            else
+            {
+                high = (byte)(filter >> 3);
+                low = (byte)(filter & 0x007);
+
+                WriteRegister(RXF1SIDH, high);
+                WriteRegister(RXF1SIDL, (byte)(low << 5));
+
+                //
+                //  Enable inteerupt. Must be done before setting
+                //  the baud rate.
+                //
+                b = ReadRegister(CANINTE);
+
+                WriteRegisterBit(CANINTE, 0, 1);
+                b = ReadRegister(CANINTE);
+                WriteRegisterBit(CANINTF, 0, 0);
+                b = ReadRegister(CANINTF);
+            }
         }
 
         /// <summary>Set the CAN baud rate.</summary>
@@ -298,7 +343,7 @@ namespace Marenco.Comms
                     break;
                 default:
                     return false;
-                    break;
+
             }
 
             byte[] cmdBuffer = new byte[] { WRITE, CNF1, (byte)(brp & 0x3F) };
